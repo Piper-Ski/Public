@@ -1,7 +1,7 @@
 # Public
 Public Portfolio Repository
 
-The Public Portfolio Repository contains my creative portfolio of work.
+The Public Portfolio Repository contains my creative portfolio of work and PMI standard projects.
 
 Projects: 
 1: Stakeholder Matrix App 
