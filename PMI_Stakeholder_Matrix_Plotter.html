@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PMI Stakeholder Matrix Plotter — Section 3</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        navy: '#0F2144',
+        'navy-light': '#1A3158',
+        orange: '#F47920',
+        'orange-dark': '#D8651A',
+        'gray-light': '#F5F6F8',
+        'gray-mid': '#8896A5',
+        'gray-border': '#E0E4EA',
+        blue: '#2A7BBD',
+        green: '#27AE60',
+        red: '#E74C3C',
+        purple: '#8E44AD',
+      }
+    }
+  }
+};
+</script>
+<script src="https://unpkg.com/lucide@latest" defer></script>
+<style>
+:root {
+  --navy: #0F2144;
+  --orange: #F47920;
+  --gray-light: #F5F6F8;
+  --gray-mid: #8896A5;
+  --gray-border: #E0E4EA;
+  --blue: #2A7BBD;
+  --green: #27AE60;
+  --red: #E74C3C;
+  --purple: #8E44AD;
+}
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; margin: 0; background: #F5F6F8; }
+h1, h2, h3, h4, h5 { font-family: Georgia, 'Times New Roman', serif; }
+
+/* Slider styling */
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 6px; border-radius: 3px;
+  background: #E0E4EA; outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--orange); cursor: pointer; border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--orange); cursor: pointer; border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* Color swatch */
+.color-swatch {
+  width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+  border: 3px solid transparent; transition: all 0.15s;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.color-swatch.selected { border-color: var(--navy); transform: scale(1.15); }
+.color-swatch svg { display: none; }
+.color-swatch.selected svg { display: block; }
+
+/* Tooltip */
+.matrix-tooltip {
+  position: absolute; background: white; border: 2px solid var(--navy);
+  border-radius: 8px; padding: 10px 14px; box-shadow: 0 4px 16px rgba(15,33,68,0.18);
+  pointer-events: none; z-index: 100; font-size: 13px; min-width: 180px;
+  opacity: 0; transition: opacity 0.15s;
+}
+.matrix-tooltip.visible { opacity: 1; }
+
+/* Tab transition */
+.tab-content { animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Dot pulse animation */
+@keyframes dotPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+.dot-pulse { animation: dotPulse 0.45s ease; }
+
+/* Scrollbar for left panel */
+.registry-list::-webkit-scrollbar { width: 5px; }
+.registry-list::-webkit-scrollbar-track { background: transparent; }
+.registry-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+/* Print styles */
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  body { background: white; }
+  .right-panel { width: 100% !important; padding: 0 !important; }
+}
+
+/* Engagement badge */
+.badge-c {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--orange); color: white; font-weight: 700; font-size: 12px;
+}
+.badge-d {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--navy); color: white; font-weight: 700; font-size: 12px;
+}
+.badge-cd {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; height: 28px; border-radius: 14px;
+  background: linear-gradient(90deg, var(--orange) 50%, var(--navy) 50%);
+  color: white; font-weight: 700; font-size: 10px;
+}
+
+/* Venn circle labels */
+.venn-label { font-weight: 700; font-size: 14px; fill: white; text-anchor: middle; }
+.venn-zone-label { font-size: 11px; fill: rgba(15,33,68,0.7); text-anchor: middle; font-weight: 600; }
+</style>
+</head>
+<body data-id="0" class="min-h-screen">
+<app-icon data-id="1" hidden data-icon="columns-3" data-palette="Dark"></app-icon>
+
+<!-- HEADER -->
+<header data-id="2" id="header-bar-a1b2" class="bg-navy text-white px-4 md:px-8 py-4 no-print">
+  <div data-id="3" class="flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+    <div data-id="4">
+      <h1 data-id="5" class="text-xl md:text-2xl font-bold tracking-tight leading-tight" style="font-family: Georgia, serif;">STAKEHOLDER MATRIX PLOTTER</h1>
+      <p data-id="6" class="text-orange text-sm mt-0.5" style="font-family: Georgia, serif;">Section 3 | Classification &amp; Prioritization · PMI Standard</p>
+    </div>
+    <div data-id="7" class="flex items-center gap-3">
+      <span data-id="8" class="text-xs border border-orange text-orange rounded-full px-3 py-1 font-semibold whitespace-nowrap">PMI PMBOK® Aligned</span>
+      <button data-id="9" id="mobile-menu-btn-x9z1" class="md:hidden p-2 text-white">
+        <i data-id="10" data-lucide="menu" class="w-6 h-6"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN LAYOUT -->
+<div data-id="11" class="flex flex-col md:flex-row min-h-[calc(100vh-80px)]">
+
+  <!-- LEFT PANEL -->
+  <aside data-id="12" id="left-panel-k3m4" class="no-print w-full md:w-[28%] bg-white border-r border-gray-border flex-shrink-0 flex flex-col" style="max-height: calc(100vh - 80px);">
+    <!-- Mobile collapse toggle -->
+    <button data-id="13" id="toggle-panel-btn-r5t6" class="md:hidden w-full flex items-center justify-between px-4 py-3 bg-navy text-white text-sm font-semibold">
+      <span data-id="14">Stakeholder Registry</span>
+      <i data-id="15" data-lucide="chevron-down" class="w-4 h-4 transition-transform" id="panel-chevron-u7v8"></i>
+    </button>
+
+    <div data-id="16" id="panel-content-w9x0" class="overflow-y-auto registry-list flex-1 md:block hidden md:!block">
+      <!-- FORM -->
+      <div data-id="17" class="p-4 border-b border-gray-border">
+        <h3 data-id="18" class="text-sm font-bold text-navy mb-3 uppercase tracking-wide flex items-center gap-2">
+          <i data-id="19" data-lucide="user-plus" class="w-4 h-4 text-orange"></i>
+          <span data-id="20" id="form-title-a1b1">Add Stakeholder</span>
+        </h3>
+
+        <div data-id="21" class="space-y-3">
+          <div data-id="22">
+            <label data-id="23" class="text-xs font-semibold text-gray-mid uppercase tracking-wide">Name *</label>
+            <input data-id="24" id="inp-name-c2d3" type="text" placeholder="e.g. John Smith" class="w-full mt-1 px-3 py-2 border border-gray-border rounded text-sm focus:outline-none focus:border-orange">
+          </div>
+          <div data-id="25">
+            <label data-id="26" class="text-xs font-semibold text-gray-mid uppercase tracking-wide">Role / Group *</label>
+            <input data-id="27" id="inp-role-e4f5" type="text" placeholder="e.g. Sponsor" class="w-full mt-1 px-3 py-2 border border-gray-border rounded text-sm focus:outline-none focus:border-orange">
+          </div>
+
+          <!-- Sliders -->
+          <div data-id="28" class="grid grid-cols-2 gap-3">
+            <div data-id="29">
+              <label data-id="30" class="text-xs font-semibold text-gray-mid uppercase tracking-wide flex justify-between">Power <span data-id="31" id="val-power-g6h7" class="text-orange font-bold">5</span></label>
+              <input data-id="32" id="slider-power-i8j9" type="range" min="1" max="10" value="5" class="mt-1">
+            </div>
+            <div data-id="33">
+              <label data-id="34" class="text-xs font-semibold text-gray-mid uppercase tracking-wide flex justify-between">Interest <span data-id="35" id="val-interest-k0l1" class="text-orange font-bold">5</span></label>
+              <input data-id="36" id="slider-interest-m2n3" type="range" min="1" max="10" value="5" class="mt-1">
+            </div>
+            <div data-id="37">
+              <label data-id="38" class="text-xs font-semibold text-gray-mid uppercase tracking-wide flex justify-between">Influence <span data-id="39" id="val-influence-o4p5" class="text-orange font-bold">5</span></label>
+              <input data-id="40" id="slider-influence-q6r7" type="range" min="1" max="10" value="5" class="mt-1">
+            </div>
+            <div data-id="41">
+              <label data-id="42" class="text-xs font-semibold text-gray-mid uppercase tracking-wide flex justify-between">Urgency <span data-id="43" id="val-urgency-s8t9" class="text-orange font-bold">5</span></label>
+              <input data-id="44" id="slider-urgency-u0v1" type="range" min="1" max="10" value="5" class="mt-1">
+            </div>
+          </div>
+          <div data-id="45" class="w-1/2 pr-1.5">
+            <label data-id="46" class="text-xs font-semibold text-gray-mid uppercase tracking-wide flex justify-between">Legitimacy <span data-id="47" id="val-legitimacy-w2x3" class="text-orange font-bold">5</span></label>
+            <input data-id="48" id="slider-legitimacy-y4z5" type="range" min="1" max="10" value="5" class="mt-1">
+          </div>
+
+          <!-- Dropdowns -->
+          <div data-id="49" class="grid grid-cols-2 gap-3">
+            <div data-id="50">
+              <label data-id="51" class="text-xs font-semibold text-gray-mid uppercase tracking-wide">Current Engage.</label>
+              <select data-id="52" id="sel-current-a6b7" class="w-full mt-1 px-2 py-2 border border-gray-border rounded text-sm focus:outline-none focus:border-orange bg-white">
+                <option data-id="53">Unaware</option><option data-id="54">Resistant</option><option data-id="55" selected>Neutral</option><option data-id="56">Supportive</option><option data-id="57">Leading</option>
+              </select>
+            </div>
+            <div data-id="58">
+              <label data-id="59" class="text-xs font-semibold text-gray-mid uppercase tracking-wide">Desired Engage.</label>
+              <select data-id="60" id="sel-desired-c8d9" class="w-full mt-1 px-2 py-2 border border-gray-border rounded text-sm focus:outline-none focus:border-orange bg-white">
+                <option data-id="61">Unaware</option><option data-id="62">Resistant</option><option data-id="63">Neutral</option><option data-id="64" selected>Supportive</option><option data-id="65">Leading</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Color picker -->
+          <div data-id="66">
+            <label data-id="67" class="text-xs font-semibold text-gray-mid uppercase tracking-wide">Dot Color</label>
+            <div data-id="68" class="flex gap-2 mt-1.5" id="color-swatches-e0f1"></div>
+          </div>
+
+          <button data-id="69" id="btn-add-g2h3" class="w-full bg-orange hover:bg-orange-dark text-white font-bold py-2.5 rounded-lg text-sm transition-colors">
+            Add Stakeholder
+          </button>
+          <button data-id="70" id="btn-cancel-edit-i4j5" class="w-full border border-gray-border text-gray-mid font-semibold py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors hidden">
+            Cancel Edit
+          </button>
+        </div>
+      </div>
+
+      <!-- REGISTRY LIST -->
+      <div data-id="71" class="p-4">
+        <h3 data-id="72" class="text-xs font-bold text-gray-mid uppercase tracking-wide mb-3 flex items-center justify-between">
+          <span data-id="73">Registry (<span data-id="74" id="count-k6l7">0</span>)</span>
+        </h3>
+        <div data-id="75" id="registry-list-m8n9" class="space-y-2"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT PANEL -->
+  <main data-id="76" class="right-panel flex-1 bg-gray-light flex flex-col overflow-hidden">
+    <!-- Tab Navigation -->
+    <div data-id="77" class="no-print px-4 md:px-6 pt-4 flex flex-wrap gap-2" id="tabs-container-o0p1">
+      <button data-id="78" class="tab-btn px-4 py-2 rounded-full text-sm font-semibold transition-all" data-tab="power-interest">Power / Interest Grid</button>
+      <button data-id="79" class="tab-btn px-4 py-2 rounded-full text-sm font-semibold transition-all" data-tab="influence-interest">Influence / Interest Grid</button>
+      <button data-id="80" class="tab-btn px-4 py-2 rounded-full text-sm font-semibold transition-all" data-tab="engagement">Engagement Assessment</button>
+      <button data-id="81" class="tab-btn px-4 py-2 rounded-full text-sm font-semibold transition-all" data-tab="salience">Salience Model</button>
+    </div>
+
+    <!-- Tab content area -->
+    <div data-id="82" class="flex-1 overflow-y-auto px-4 md:px-6 py-4" id="tab-content-q2r3"></div>
+
+    <!-- Action buttons -->
+    <div data-id="83" class="no-print px-4 md:px-6 py-3 border-t border-gray-border bg-white flex flex-wrap gap-3">
+      <button data-id="84" id="btn-print-s4t5" class="flex items-center gap-2 px-4 py-2 border border-gray-border rounded-lg text-sm font-semibold text-navy hover:bg-gray-50 transition-colors">
+        <i data-id="85" data-lucide="printer" class="w-4 h-4"></i> Print / Export View
+      </button>
+      <button data-id="86" id="btn-clear-u6v7" class="flex items-center gap-2 px-4 py-2 border border-red text-red rounded-lg text-sm font-semibold hover:bg-red hover:text-white transition-colors">
+        <i data-id="87" data-lucide="trash-2" class="w-4 h-4"></i> Clear All Stakeholders
+      </button>
+    </div>
+  </main>
+</div>
+
+<!-- Tooltip -->
+<div data-id="88" id="tooltip-w8x9" class="matrix-tooltip"></div>
+
+<!-- Footer -->
+<footer data-id="89" class="no-print bg-navy text-center py-3 text-xs text-gray-mid">
+  Made by Copilot
+</footer>
+
+<!-- Print header (hidden normally) -->
+<div data-id="90" class="print-only hidden fixed top-0 left-0 w-full bg-white p-4 border-b border-gray-border">
+  <h1 data-id="91" class="text-lg font-bold text-navy" style="font-family: Georgia, serif;">Stakeholder Matrix Plotter — Section 3</h1>
+  <p data-id="92" class="text-xs text-gray-mid">Printed on <span data-id="93" id="print-date-y0z1"></span></p>
+</div>
+
+<script>
+// ===================== STATE =====================
+const COLORS = ['#F47920','#0F2144','#2A7BBD','#27AE60','#E74C3C','#8E44AD'];
+const ENGAGE_LEVELS = ['Unaware','Resistant','Neutral','Supportive','Leading'];
+let stakeholders = [];
+let editingId = null;
+let selectedColor = COLORS[0];
+let activeTab = 'power-interest';
+let nextId = 1;
+
+// ===================== PRELOADED DATA =====================
+const preloaded = [
+  { name:"Executive Sponsor", role:"Sponsor", power:9, interest:8, influence:9, urgency:8, legitimacy:9, current:"Supportive", desired:"Leading", color:"#F47920" },
+  { name:"Project Manager", role:"Internal", power:7, interest:10, influence:8, urgency:9, legitimacy:9, current:"Leading", desired:"Leading", color:"#0F2144" },
+  { name:"End Users", role:"Employees", power:3, interest:9, influence:4, urgency:5, legitimacy:7, current:"Neutral", desired:"Supportive", color:"#2A7BBD" },
+  { name:"IT Department", role:"Internal", power:6, interest:7, influence:7, urgency:6, legitimacy:8, current:"Supportive", desired:"Leading", color:"#27AE60" },
+  { name:"Regulator", role:"External", power:8, interest:4, influence:7, urgency:7, legitimacy:10, current:"Neutral", desired:"Supportive", color:"#E74C3C" },
+  { name:"Vendor", role:"Supplier", power:4, interest:6, influence:5, urgency:6, legitimacy:6, current:"Supportive", desired:"Supportive", color:"#8E44AD" }
+];
+preloaded.forEach(s => { stakeholders.push({ ...s, id: nextId++ }); });
+
+// ===================== DOM REFS =====================
+const inpName = document.getElementById('inp-name-c2d3');
+const inpRole = document.getElementById('inp-role-e4f5');
+const sliderPower = document.getElementById('slider-power-i8j9');
+const sliderInterest = document.getElementById('slider-interest-m2n3');
+const sliderInfluence = document.getElementById('slider-influence-q6r7');
+const sliderUrgency = document.getElementById('slider-urgency-u0v1');
+const sliderLegitimacy = document.getElementById('slider-legitimacy-y4z5');
+const valPower = document.getElementById('val-power-g6h7');
+const valInterest = document.getElementById('val-interest-k0l1');
+const valInfluence = document.getElementById('val-influence-o4p5');
+const valUrgency = document.getElementById('val-urgency-s8t9');
+const valLegitimacy = document.getElementById('val-legitimacy-w2x3');
+const selCurrent = document.getElementById('sel-current-a6b7');
+const selDesired = document.getElementById('sel-desired-c8d9');
+const btnAdd = document.getElementById('btn-add-g2h3');
+const btnCancelEdit = document.getElementById('btn-cancel-edit-i4j5');
+const formTitle = document.getElementById('form-title-a1b1');
+const registryList = document.getElementById('registry-list-m8n9');
+const countEl = document.getElementById('count-k6l7');
+const tabContent = document.getElementById('tab-content-q2r3');
+const tooltip = document.getElementById('tooltip-w8x9');
+const swatchContainer = document.getElementById('color-swatches-e0f1');
+
+// ===================== COLOR SWATCHES =====================
+function renderSwatches() {
+  swatchContainer.innerHTML = '';
+  COLORS.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'color-swatch' + (c === selectedColor ? ' selected' : '');
+    el.style.backgroundColor = c;
+    el.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    el.setAttribute('data-color', c);
+    el.addEventListener('click', function() {
+      selectedColor = c;
+      renderSwatches();
+    });
+    swatchContainer.appendChild(el);
+  });
+}
+renderSwatches();
+
+// ===================== SLIDER EVENTS =====================
+sliderPower.addEventListener('input', () => { valPower.textContent = sliderPower.value; });
+sliderInterest.addEventListener('input', () => { valInterest.textContent = sliderInterest.value; });
+sliderInfluence.addEventListener('input', () => { valInfluence.textContent = sliderInfluence.value; });
+sliderUrgency.addEventListener('input', () => { valUrgency.textContent = sliderUrgency.value; });
+sliderLegitimacy.addEventListener('input', () => { valLegitimacy.textContent = sliderLegitimacy.value; });
+
+// ===================== MOBILE PANEL TOGGLE =====================
+const toggleBtn = document.getElementById('toggle-panel-btn-r5t6');
+const panelContent = document.getElementById('panel-content-w9x0');
+const panelChevron = document.getElementById('panel-chevron-u7v8');
+toggleBtn.addEventListener('click', () => {
+  panelContent.classList.toggle('hidden');
+  panelChevron.style.transform = panelContent.classList.contains('hidden') ? '' : 'rotate(180deg)';
+});
+
+// ===================== UTILITY =====================
+function getInitials(name) {
+  return name.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function contrastColor(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return (r*299 + g*587 + b*114) / 1000 > 140 ? '#0F2144' : '#FFFFFF';
+}
+
+function getQuadrant(x, y) {
+  if (x > 5 && y > 5) return { name: 'Manage Closely', desc: 'Engage fully. Keep satisfied and actively involved in key decisions.' };
+  if (x <= 5 && y > 5) return { name: 'Keep Satisfied', desc: 'Meet their needs. Communicate regularly, but don\'t overwhelm.' };
+  if (x > 5 && y <= 5) return { name: 'Keep Informed', desc: 'Provide adequate information. Address concerns proactively.' };
+  return { name: 'Monitor', desc: 'Monitor with minimal effort. Watch for changes in their position.' };
+}
+
+function getSalience(s) {
+  const hp = s.power >= 6, hu = s.urgency >= 6, hl = s.legitimacy >= 6;
+  if (hp && hu && hl) return { type: 'Definitive', desc: 'Has all three attributes', action: 'Highest priority; manage proactively' };
+  if (hp && hl) return { type: 'Dominant', desc: 'Has power and legitimacy', action: 'Keep satisfied; engage regularly' };
+  if (hp && hu) return { type: 'Dangerous', desc: 'Has power and urgency but no legitimacy', action: 'Manage closely; potential disruptor' };
+  if (hu && hl) return { type: 'Dependent', desc: 'Has urgency and legitimacy but no power', action: 'Support and advocate for them' };
+  if (hp) return { type: 'Dormant', desc: 'Has power but no urgency or legitimacy', action: 'Monitor carefully' };
+  if (hu) return { type: 'Demanding', desc: 'Urgent but no power or legitimacy', action: 'Minimal effort required' };
+  if (hl) return { type: 'Discretionary', desc: 'Has legitimacy but no power or urgency', action: 'Keep informed' };
+  return { type: 'Non-stakeholder', desc: 'No significant attributes', action: 'Monitor occasionally' };
+}
+
+// ===================== FORM HANDLING =====================
+function resetForm() {
+  inpName.value = ''; inpRole.value = '';
+  sliderPower.value = 5; sliderInterest.value = 5; sliderInfluence.value = 5;
+  sliderUrgency.value = 5; sliderLegitimacy.value = 5;
+  valPower.textContent = '5'; valInterest.textContent = '5'; valInfluence.textContent = '5';
+  valUrgency.textContent = '5'; valLegitimacy.textContent = '5';
+  selCurrent.value = 'Neutral'; selDesired.value = 'Supportive';
+  selectedColor = COLORS[0]; renderSwatches();
+  editingId = null;
+  btnAdd.textContent = 'Add Stakeholder';
+  formTitle.textContent = 'Add Stakeholder';
+  btnCancelEdit.classList.add('hidden');
+}
+
+function getFormData() {
+  return {
+    name: inpName.value.trim(),
+    role: inpRole.value.trim(),
+    power: parseInt(sliderPower.value),
+    interest: parseInt(sliderInterest.value),
+    influence: parseInt(sliderInfluence.value),
+    urgency: parseInt(sliderUrgency.value),
+    legitimacy: parseInt(sliderLegitimacy.value),
+    current: selCurrent.value,
+    desired: selDesired.value,
+    color: selectedColor
+  };
+}
+
+btnAdd.addEventListener('click', () => {
+  const data = getFormData();
+  if (!data.name || !data.role) {
+    inpName.style.borderColor = data.name ? '' : '#E74C3C';
+    inpRole.style.borderColor = data.role ? '' : '#E74C3C';
+    return;
+  }
+  inpName.style.borderColor = ''; inpRole.style.borderColor = '';
+
+  if (editingId !== null) {
+    const idx = stakeholders.findIndex(s => s.id === editingId);
+    if (idx >= 0) stakeholders[idx] = { ...data, id: editingId };
+  } else {
+    stakeholders.push({ ...data, id: nextId++ });
+  }
+  resetForm();
+  renderAll();
+});
+
+btnCancelEdit.addEventListener('click', () => { resetForm(); });
+
+function editStakeholder(id) {
+  const s = stakeholders.find(x => x.id === id);
+  if (!s) return;
+  editingId = id;
+  inpName.value = s.name; inpRole.value = s.role;
+  sliderPower.value = s.power; sliderInterest.value = s.interest;
+  sliderInfluence.value = s.influence; sliderUrgency.value = s.urgency;
+  sliderLegitimacy.value = s.legitimacy;
+  valPower.textContent = s.power; valInterest.textContent = s.interest;
+  valInfluence.textContent = s.influence; valUrgency.textContent = s.urgency;
+  valLegitimacy.textContent = s.legitimacy;
+  selCurrent.value = s.current; selDesired.value = s.desired;
+  selectedColor = s.color; renderSwatches();
+  btnAdd.textContent = 'Update Stakeholder';
+  formTitle.textContent = 'Edit Stakeholder';
+  btnCancelEdit.classList.remove('hidden');
+  // Scroll form into view on mobile
+  inpName.focus();
+}
+
+function deleteStakeholder(id) {
+  stakeholders = stakeholders.filter(s => s.id !== id);
+  if (editingId === id) resetForm();
+  renderAll();
+}
+
+// ===================== RENDER REGISTRY =====================
+function renderRegistry() {
+  countEl.textContent = stakeholders.length;
+  registryList.innerHTML = '';
+  stakeholders.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'flex items-center justify-between p-2.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border-l-4';
+    card.style.borderLeftColor = s.color;
+    card.innerHTML = `
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:${s.color};color:${contrastColor(s.color)}">${getInitials(s.name)}</div>
+        <div class="min-w-0">
+          <div class="text-sm font-semibold text-navy truncate">${s.name}</div>
+          <div class="text-xs text-gray-mid truncate">${s.role}</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1 flex-shrink-0">
+        <button class="edit-btn p-1.5 rounded hover:bg-gray-200 transition-colors" data-id="${s.id}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8896A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        </button>
+        <button class="del-btn p-1.5 rounded hover:bg-red-100 transition-colors" data-id="${s.id}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8896A5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
+      </div>`;
+    registryList.appendChild(card);
+  });
+  // Attach events
+  registryList.querySelectorAll('.edit-btn').forEach(b => {
+    b.addEventListener('click', () => editStakeholder(parseInt(b.dataset.id)));
+  });
+  registryList.querySelectorAll('.del-btn').forEach(b => {
+    b.addEventListener('click', () => deleteStakeholder(parseInt(b.dataset.id)));
+  });
+}
+
+// ===================== TABS =====================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeTab = btn.dataset.tab;
+    renderTabs();
+    renderActiveTab();
+  });
+});
+
+function renderTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    if (btn.dataset.tab === activeTab) {
+      btn.className = 'tab-btn px-4 py-2 rounded-full text-sm font-semibold transition-all bg-orange text-white shadow-sm';
+    } else {
+      btn.className = 'tab-btn px-4 py-2 rounded-full text-sm font-semibold transition-all bg-white text-navy hover:border-b-2 hover:border-orange';
+    }
+  });
+}
+
+// ===================== GRID RENDERING (SVG) =====================
+// FIX: Added dot nudging to prevent overlapping dots at the same coordinates
+function nudgeDots(stakeholdersList, getX, getY) {
+  const posMap = {};
+  const nudged = [];
+  stakeholdersList.forEach(s => {
+    const key = `${getX(s)}_${getY(s)}`;
+    if (!posMap[key]) posMap[key] = [];
+    posMap[key].push(s);
+  });
+  Object.values(posMap).forEach(group => {
+    if (group.length === 1) {
+      nudged.push({ s: group[0], dx: 0, dy: 0 });
+    } else {
+      group.forEach((s, i) => {
+        const angle = (2 * Math.PI * i) / group.length;
+        const spread = Math.min(group.length * 7, 22);
+        nudged.push({ s, dx: Math.cos(angle) * spread, dy: Math.sin(angle) * spread });
+      });
+    }
+  });
+  return nudged;
+}
+
+function renderGrid(xLabel, yLabel, getX, getY) {
+  const W = 520, H = 520, PAD = 55, RIGHT_PAD = 25, TOP_PAD = 25;
+  const gw = W - PAD - RIGHT_PAD, gh = H - PAD - TOP_PAD;
+
+  function sx(v) { return PAD + ((v - 1) / 9) * gw; }
+  function sy(v) { return TOP_PAD + gh - ((v - 1) / 9) * gh; }
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full max-w-[560px]" style="font-family: system-ui, sans-serif;">`;
+
+  // Shadow filter — moved to top so it's defined before use
+  svg += `<defs><filter id="dotShadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.2"/></filter></defs>`;
+
+  // Background quadrants
+  const mx = sx(5.5), my = sy(5.5);
+  svg += `<rect x="${PAD}" y="${TOP_PAD}" width="${mx-PAD}" height="${my-TOP_PAD}" fill="#F5F6F8" stroke="#E0E4EA" stroke-width="1"/>`;
+  svg += `<rect x="${mx}" y="${TOP_PAD}" width="${PAD+gw-mx}" height="${my-TOP_PAD}" fill="#FFF7F0" stroke="#0F2144" stroke-width="1.5"/>`;
+  svg += `<rect x="${PAD}" y="${my}" width="${mx-PAD}" height="${TOP_PAD+gh-my}" fill="#FAFAFA" stroke="#E0E4EA" stroke-width="1"/>`;
+  svg += `<rect x="${mx}" y="${my}" width="${PAD+gw-mx}" height="${TOP_PAD+gh-my}" fill="#F5F6F8" stroke="#E0E4EA" stroke-width="1"/>`;
+
+  // Dashed dividers
+  svg += `<line x1="${mx}" y1="${TOP_PAD}" x2="${mx}" y2="${TOP_PAD+gh}" stroke="#0F2144" stroke-width="1.5" stroke-dasharray="6,4"/>`;
+  svg += `<line x1="${PAD}" y1="${my}" x2="${PAD+gw}" y2="${my}" stroke="#0F2144" stroke-width="1.5" stroke-dasharray="6,4"/>`;
+
+  // Quadrant labels
+  const qlStyle = 'font-size="13" fill="#F4792055" font-weight="700" text-anchor="middle" font-family="Georgia, serif"';
+  const qcx1 = PAD + (mx - PAD) / 2, qcx2 = mx + (PAD + gw - mx) / 2;
+  const qcy1 = TOP_PAD + (my - TOP_PAD) / 2, qcy2 = my + (TOP_PAD + gh - my) / 2;
+  svg += `<text x="${qcx1}" y="${qcy1}" ${qlStyle}>KEEP SATISFIED</text>`;
+  svg += `<text x="${qcx2}" y="${qcy1}" ${qlStyle}>MANAGE CLOSELY</text>`;
+  svg += `<text x="${qcx1}" y="${qcy2}" ${qlStyle}>MONITOR</text>`;
+  svg += `<text x="${qcx2}" y="${qcy2}" ${qlStyle}>KEEP INFORMED</text>`;
+
+  // Axes
+  const ticks = [1,2,3,4,5,6,7,8,9,10];
+  ticks.forEach(t => {
+    svg += `<text x="${sx(t)}" y="${TOP_PAD + gh + 18}" text-anchor="middle" font-size="10" fill="#8896A5">${t}</text>`;
+    svg += `<text x="${PAD - 10}" y="${sy(t) + 4}" text-anchor="end" font-size="10" fill="#8896A5">${t}</text>`;
+    // Grid lines
+    svg += `<line x1="${sx(t)}" y1="${TOP_PAD}" x2="${sx(t)}" y2="${TOP_PAD+gh}" stroke="#E0E4EA" stroke-width="0.5" opacity="0.5"/>`;
+    svg += `<line x1="${PAD}" y1="${sy(t)}" x2="${PAD+gw}" y2="${sy(t)}" stroke="#E0E4EA" stroke-width="0.5" opacity="0.5"/>`;
+  });
+
+  // Axis labels
+  svg += `<text x="${PAD + gw/2}" y="${H - 2}" text-anchor="middle" font-size="13" fill="#0F2144" font-weight="700" font-family="Georgia, serif">${xLabel}</text>`;
+  svg += `<text x="14" y="${TOP_PAD + gh/2}" text-anchor="middle" font-size="13" fill="#0F2144" font-weight="700" transform="rotate(-90,14,${TOP_PAD + gh/2})" font-family="Georgia, serif">${yLabel}</text>`;
+
+  // Low/High labels
+  svg += `<text x="${PAD + 4}" y="${H - 2}" font-size="9" fill="#8896A5">Low</text>`;
+  svg += `<text x="${PAD + gw - 4}" y="${H - 2}" text-anchor="end" font-size="9" fill="#8896A5">High</text>`;
+  svg += `<text x="14" y="${TOP_PAD + gh - 4}" font-size="9" fill="#8896A5" transform="rotate(-90,14,${TOP_PAD+gh-4})">Low</text>`;
+  svg += `<text x="14" y="${TOP_PAD + 14}" font-size="9" fill="#8896A5" transform="rotate(-90,14,${TOP_PAD+14})">High</text>`;
+
+  // FIX: Stakeholder dots with nudging for overlaps
+  const nudgedDots = nudgeDots(stakeholders, getX, getY);
+  nudgedDots.forEach(({ s, dx, dy }) => {
+    const cx = sx(getX(s)) + dx;
+    const cy = sy(getY(s)) + dy;
+    const initials = getInitials(s.name);
+    const tc = contrastColor(s.color);
+    svg += `<g class="stakeholder-dot" data-sid="${s.id}" style="cursor:pointer;">`;
+    svg += `<circle cx="${cx}" cy="${cy}" r="16" fill="${s.color}" stroke="white" stroke-width="2" filter="url(#dotShadow)"/>`;
+    svg += `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="10" fill="${tc}" font-weight="700">${initials}</text>`;
+    svg += `</g>`;
+  });
+
+  svg += `</svg>`;
+  return svg;
+}
+
+function renderQuadrantLegend() {
+  return `
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+    <div class="flex gap-3 items-start p-3 bg-white rounded-lg border border-gray-border">
+      <div class="w-3 h-3 rounded-sm bg-orange mt-0.5 flex-shrink-0"></div>
+      <div><div class="text-sm font-bold text-navy">Manage Closely</div><div class="text-xs text-gray-mid">Engage fully. Keep satisfied and actively involved in key decisions.</div></div>
+    </div>
+    <div class="flex gap-3 items-start p-3 bg-white rounded-lg border border-gray-border">
+      <div class="w-3 h-3 rounded-sm bg-navy mt-0.5 flex-shrink-0"></div>
+      <div><div class="text-sm font-bold text-navy">Keep Satisfied</div><div class="text-xs text-gray-mid">Meet their needs. Communicate regularly, but don't overwhelm.</div></div>
+    </div>
+    <div class="flex gap-3 items-start p-3 bg-white rounded-lg border border-gray-border">
+      <div class="w-3 h-3 rounded-sm bg-blue mt-0.5 flex-shrink-0"></div>
+      <div><div class="text-sm font-bold text-navy">Keep Informed</div><div class="text-xs text-gray-mid">Provide adequate information. Address concerns proactively.</div></div>
+    </div>
+    <div class="flex gap-3 items-start p-3 bg-white rounded-lg border border-gray-border">
+      <div class="w-3 h-3 rounded-sm bg-gray-mid mt-0.5 flex-shrink-0"></div>
+      <div><div class="text-sm font-bold text-navy">Monitor</div><div class="text-xs text-gray-mid">Monitor with minimal effort. Watch for changes in their position.</div></div>
+    </div>
+  </div>`;
+}
+
+// ===================== ENGAGEMENT MATRIX =====================
+function renderEngagement() {
+  const cols = ENGAGE_LEVELS;
+  const colDescs = [
+    'Unaware of project and potential impacts',
+    'Aware but resistant to change',
+    'Aware but neither supportive nor resistant',
+    'Aware and supportive of change',
+    'Actively engaged in ensuring success'
+  ];
+
+  let gaps = 0;
+  stakeholders.forEach(s => { if (s.current !== s.desired) gaps++; });
+
+  let html = `<div class="overflow-x-auto">
+  <table class="w-full border-collapse min-w-[600px]">
+    <thead>
+      <tr>
+        <th class="text-left p-3 bg-navy text-white text-sm font-bold rounded-tl-lg min-w-[140px]" style="font-family:Georgia,serif">Stakeholder</th>`;
+  cols.forEach((c, i) => {
+    html += `<th class="p-3 bg-navy text-white text-sm font-bold text-center ${i === cols.length-1 ? 'rounded-tr-lg' : ''} min-w-[100px]">
+      <div>${c}</div>
+      <div class="font-normal text-xs opacity-70 mt-0.5">${colDescs[i]}</div>
+    </th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  stakeholders.forEach((s, idx) => {
+    const ci = cols.indexOf(s.current);
+    const di = cols.indexOf(s.desired);
+    const bg = idx % 2 === 0 ? 'bg-white' : 'bg-gray-light';
+    html += `<tr class="${bg}">
+      <td class="p-3 border-b border-gray-border">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-full flex-shrink-0" style="background:${s.color}"></div>
+          <span class="text-sm font-semibold text-navy">${s.name}</span>
+        </div>
+      </td>`;
+    cols.forEach((c, j) => {
+      let cell = '';
+      if (ci === di && ci === j) {
+        cell = `<div class="badge-cd">C=D</div>`;
+      } else if (ci === j) {
+        cell = `<div class="badge-c">C</div>`;
+      } else if (di === j) {
+        cell = `<div class="badge-d">D</div>`;
+      }
+      // Arrow between C and D
+      if (ci !== di && j > Math.min(ci, di) && j < Math.max(ci, di)) {
+        cell = `<span class="text-orange text-lg font-bold">${ci < di ? '→' : '←'}</span>`;
+      }
+      html += `<td class="p-3 border-b border-gray-border text-center">${cell}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+
+  // Legend
+  html += `<div class="flex flex-wrap items-center gap-4 mt-4 text-sm">
+    <div class="flex items-center gap-2"><div class="badge-c" style="width:22px;height:22px;font-size:10px">C</div> Current Engagement</div>
+    <div class="flex items-center gap-2"><div class="badge-d" style="width:22px;height:22px;font-size:10px">D</div> Desired Engagement</div>
+    <div class="flex items-center gap-2"><span class="text-orange font-bold">→</span> Engagement Gap (Action Required)</div>
+  </div>`;
+  html += `<div class="mt-3 text-sm font-bold text-navy">${gaps} of ${stakeholders.length} stakeholders have engagement gaps requiring action</div>`;
+
+  return html;
+}
+
+// ===================== SALIENCE MODEL =====================
+// FIX: Returns an object { svg, table } so they can be placed in separate containers
+function renderSalience() {
+  const W = 540, H = 480;
+  // Three circles: Power (top-center), Urgency (bottom-left), Legitimacy (bottom-right)
+  const r = 140;
+  const cx1 = W/2, cy1 = 165;       // Power
+  const cx2 = W/2 - 95, cy2 = 310;  // Urgency
+  const cx3 = W/2 + 95, cy3 = 310;  // Legitimacy
+
+  // Classify stakeholders
+  const zones = { Dormant:[], Demanding:[], Discretionary:[], Dominant:[], Dangerous:[], Dependent:[], Definitive:[], 'Non-stakeholder':[] };
+  stakeholders.forEach(s => {
+    const sal = getSalience(s);
+    zones[sal.type].push(s);
+  });
+
+  // Zone positions for dots (approximate center of each zone)
+  const zonePos = {
+    Dormant: { x: cx1, y: cy1 - 70 },
+    Demanding: { x: cx2 - 65, y: cy2 + 40 },
+    Discretionary: { x: cx3 + 65, y: cy3 + 40 },
+    Dominant: { x: (cx1 + cx3) / 2 + 30, y: (cy1 + cy3) / 2 },
+    Dangerous: { x: (cx1 + cx2) / 2 - 30, y: (cy1 + cy2) / 2 },
+    Dependent: { x: W/2, y: cy2 + 45 },
+    Definitive: { x: W/2, y: (cy1 + cy2 + cy3) / 3 + 15 },
+    'Non-stakeholder': { x: W/2, y: H - 15 }
+  };
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full max-w-[560px]" style="font-family: system-ui, sans-serif;">`;
+
+  // Circles
+  svg += `<circle cx="${cx1}" cy="${cy1}" r="${r}" fill="#0F2144" opacity="0.18" stroke="#0F2144" stroke-width="2"/>`;
+  svg += `<circle cx="${cx2}" cy="${cy2}" r="${r}" fill="#F47920" opacity="0.18" stroke="#F47920" stroke-width="2"/>`;
+  svg += `<circle cx="${cx3}" cy="${cy3}" r="${r}" fill="#2A7BBD" opacity="0.18" stroke="#2A7BBD" stroke-width="2"/>`;
+
+  // Circle labels
+  svg += `<text x="${cx1}" y="${cy1 - r + 22}" class="venn-label" fill="#0F2144" font-size="15">POWER</text>`;
+  svg += `<text x="${cx2 - 40}" y="${cy2 + 20}" class="venn-label" fill="#C85A00" font-size="15">URGENCY</text>`;
+  svg += `<text x="${cx3 + 40}" y="${cy3 + 20}" class="venn-label" fill="#1E5F8E" font-size="15">LEGITIMACY</text>`;
+
+  // Zone labels
+  svg += `<text x="${cx1}" y="${cy1 - 45}" class="venn-zone-label">Dormant</text>`;
+  svg += `<text x="${cx2 - 55}" y="${cy2 + 55}" class="venn-zone-label">Demanding</text>`;
+  svg += `<text x="${cx3 + 55}" y="${cy3 + 55}" class="venn-zone-label">Discretionary</text>`;
+  svg += `<text x="${(cx1+cx3)/2 + 35}" y="${(cy1+cy3)/2 - 15}" class="venn-zone-label">Dominant</text>`;
+  svg += `<text x="${(cx1+cx2)/2 - 35}" y="${(cy1+cy2)/2 - 15}" class="venn-zone-label">Dangerous</text>`;
+  svg += `<text x="${W/2}" y="${cy2 + 68}" class="venn-zone-label">Dependent</text>`;
+  svg += `<text x="${W/2}" y="${(cy1+cy2+cy3)/3 - 8}" class="venn-zone-label" font-size="12" fill="#0F2144">Definitive</text>`;
+
+  // Place stakeholder dots in zones
+  Object.entries(zones).forEach(([zType, arr]) => {
+    if (!arr.length || zType === 'Non-stakeholder') return;
+    const base = zonePos[zType];
+    arr.forEach((s, i) => {
+      const angle = (2 * Math.PI * i) / Math.max(arr.length, 1);
+      const spread = Math.min(arr.length * 8, 35);
+      const dx = arr.length > 1 ? Math.cos(angle) * spread : 0;
+      const dy = arr.length > 1 ? Math.sin(angle) * spread : 0;
+      const px = base.x + dx, py = base.y + dy;
+      const initials = getInitials(s.name);
+      const tc = contrastColor(s.color);
+      svg += `<g class="stakeholder-dot" data-sid="${s.id}" style="cursor:pointer">
+        <circle cx="${px}" cy="${py}" r="14" fill="${s.color}" stroke="white" stroke-width="2"/>
+        <text x="${px}" y="${py + 4}" text-anchor="middle" font-size="9" fill="${tc}" font-weight="700">${initials}</text>
+      </g>`;
+    });
+  });
+
+  svg += `</svg>`;
+
+  // Reference table
+  const refData = [
+    ['Definitive', 'Has all three attributes', 'Highest priority; manage proactively', '#0F2144'],
+    ['Dominant', 'Has power and legitimacy', 'Keep satisfied; engage regularly', '#1A3158'],
+    ['Dangerous', 'Has power and urgency but no legitimacy', 'Manage closely; potential disruptor', '#E74C3C'],
+    ['Dependent', 'Has urgency and legitimacy but no power', 'Support and advocate for them', '#2A7BBD'],
+    ['Dormant', 'Has power but no urgency or legitimacy', 'Monitor carefully', '#8896A5'],
+    ['Demanding', 'Urgent but no power or legitimacy', 'Minimal effort required', '#F47920'],
+    ['Discretionary', 'Has legitimacy but no power or urgency', 'Keep informed', '#27AE60']
+  ];
+
+  let table = `<div class="overflow-x-auto mt-4">
+    <table class="w-full border-collapse text-sm min-w-[500px]">
+      <thead><tr>
+        <th class="text-left p-2.5 bg-navy text-white rounded-tl-lg">Classification</th>
+        <th class="text-left p-2.5 bg-navy text-white">Description</th>
+        <th class="text-left p-2.5 bg-navy text-white rounded-tr-lg">Recommended Action</th>
+      </tr></thead><tbody>`;
+  refData.forEach(([cls, desc, action, color], i) => {
+    const bg = i % 2 === 0 ? 'bg-white' : 'bg-gray-light';
+    const count = (zones[cls] || []).length;
+    table += `<tr class="${bg}">
+      <td class="p-2.5 border-b border-gray-border font-semibold text-navy"><span class="inline-block w-2.5 h-2.5 rounded-full mr-2" style="background:${color}"></span>${cls} ${count > 0 ? `<span class="text-xs text-gray-mid">(${count})</span>` : ''}</td>
+      <td class="p-2.5 border-b border-gray-border text-gray-mid">${desc}</td>
+      <td class="p-2.5 border-b border-gray-border">${action}</td>
+    </tr>`;
+  });
+  table += `</tbody></table></div>`;
+
+  return { svg, table };
+}
+
+// ===================== TAB CONTENT RENDERING =====================
+function renderActiveTab() {
+  let html = '<div class="tab-content">';
+
+  switch (activeTab) {
+    case 'power-interest': {
+      html += `<div class="flex items-start gap-2 p-3 mb-4 bg-white border-l-4 border-navy rounded-r-lg text-xs text-gray-mid leading-relaxed">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F2144" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>The <strong>Power/Interest Grid</strong> groups stakeholders based on their level of authority (power) and their level of concern (interest) regarding project outcomes. — <em>PMBOK® Guide</em></span>
+      </div>`;
+      html += `<div class="flex justify-center">` + renderGrid('INTEREST ➜', '⬆ POWER', s => s.interest, s => s.power) + `</div>`;
+      html += renderQuadrantLegend();
+      break;
+    }
+    case 'influence-interest': {
+      html += `<div class="flex items-start gap-2 p-3 mb-4 bg-white border-l-4 border-navy rounded-r-lg text-xs text-gray-mid leading-relaxed">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F2144" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>The <strong>Influence/Interest Grid</strong> categorizes stakeholders by their ability to effect change in the project (influence) versus their level of stake in the outcome (interest). — <em>PMBOK® Guide</em></span>
+      </div>`;
+      html += `<div class="flex justify-center">` + renderGrid('INTEREST ➜', '⬆ INFLUENCE', s => s.interest, s => s.influence) + `</div>`;
+      html += renderQuadrantLegend();
+      break;
+    }
+    case 'engagement': {
+      html += `<div class="flex items-start gap-2 p-3 mb-4 bg-white border-l-4 border-navy rounded-r-lg text-xs text-gray-mid leading-relaxed">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F2144" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>The <strong>Engagement Assessment Matrix</strong> classifies stakeholders by their current and desired engagement levels. Gaps between C (Current) and D (Desired) identify where management action is required. — <em>PMBOK® Guide</em></span>
+      </div>`;
+      html += renderEngagement();
+      break;
+    }
+    case 'salience': {
+      html += `<div class="flex items-start gap-2 p-3 mb-4 bg-white border-l-4 border-navy rounded-r-lg text-xs text-gray-mid leading-relaxed">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F2144" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>The <strong>Salience Model</strong> categorizes stakeholders by their Power, Urgency, and Legitimacy — identifying who qualifies as Definitive, Dominant, Dangerous, Dependent, Demanding, Discretionary, or Dormant. — <em>PMBOK® Guide</em></span>
+      </div>`;
+      // FIX: Separate SVG (centered) and table (full-width) into distinct containers
+      const salience = renderSalience();
+      html += `<div class="flex justify-center">${salience.svg}</div>`;
+      html += salience.table;
+      break;
+    }
+  }
+
+  html += '</div>';
+  tabContent.innerHTML = html;
+  attachTooltips();
+}
+
+// ===================== TOOLTIPS =====================
+function attachTooltips() {
+  const dots = tabContent.querySelectorAll('.stakeholder-dot');
+  dots.forEach(dot => {
+    dot.addEventListener('mouseenter', (e) => {
+      const sid = parseInt(dot.dataset.sid);
+      const s = stakeholders.find(x => x.id === sid);
+      if (!s) return;
+
+      let info = `<div class="font-bold text-navy text-sm">${s.name}</div>
+        <div class="text-xs text-gray-mid mb-1.5">${s.role}</div>`;
+
+      if (activeTab === 'power-interest') {
+        const q = getQuadrant(s.interest, s.power);
+        info += `<div class="text-xs"><strong>Power:</strong> ${s.power} · <strong>Interest:</strong> ${s.interest}</div>
+          <div class="text-xs mt-1 text-orange font-semibold">${q.name}</div>`;
+      } else if (activeTab === 'influence-interest') {
+        const q = getQuadrant(s.interest, s.influence);
+        info += `<div class="text-xs"><strong>Influence:</strong> ${s.influence} · <strong>Interest:</strong> ${s.interest}</div>
+          <div class="text-xs mt-1 text-orange font-semibold">${q.name}</div>`;
+      } else if (activeTab === 'salience') {
+        const sal = getSalience(s);
+        info += `<div class="text-xs"><strong>Power:</strong> ${s.power} · <strong>Urgency:</strong> ${s.urgency} · <strong>Legitimacy:</strong> ${s.legitimacy}</div>
+          <div class="text-xs mt-1 text-orange font-semibold">${sal.type}</div>`;
+      }
+
+      tooltip.innerHTML = info;
+      tooltip.classList.add('visible');
+
+      const rect = dot.getBoundingClientRect();
+      // FIX: Added window.scrollX for horizontal scroll and clamp to viewport
+      let left = rect.left + window.scrollX + rect.width / 2 - 90;
+      let top = rect.top + window.scrollY - 10 - tooltip.offsetHeight;
+
+      // Clamp tooltip so it doesn't go off the left edge
+      if (left < 4) left = 4;
+      // Clamp tooltip so it doesn't go off the right edge
+      const maxLeft = document.documentElement.clientWidth - tooltip.offsetWidth - 4;
+      if (left > maxLeft) left = maxLeft;
+      // If tooltip would go above viewport top, show below the dot instead
+      if (top < window.scrollY + 4) {
+        top = rect.bottom + window.scrollY + 10;
+      }
+
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = top + 'px';
+    });
+    dot.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('visible');
+    });
+  });
+}
+
+// Hide tooltip on scroll
+document.addEventListener('scroll', () => { tooltip.classList.remove('visible'); }, true);
+
+// ===================== ACTION BUTTONS =====================
+document.getElementById('btn-print-s4t5').addEventListener('click', () => {
+  const pd = document.getElementById('print-date-y0z1');
+  if (pd) pd.textContent = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  window.print();
+});
+
+document.getElementById('btn-clear-u6v7').addEventListener('click', () => {
+  if (confirm('Remove all stakeholders from the registry? This cannot be undone.')) {
+    stakeholders = [];
+    resetForm();
+    renderAll();
+  }
+});
+
+// ===================== RENDER ALL =====================
+function renderAll() {
+  renderRegistry();
+  renderTabs();
+  renderActiveTab();
+}
+
+// ===================== INIT =====================
+// FIX: Use DOMContentLoaded to ensure the deferred Lucide script has loaded
+// Deferred scripts execute after parsing but BEFORE DOMContentLoaded fires,
+// so this guarantees lucide is available when we call createIcons().
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
+    lucide.createIcons();
+  }
+});
+renderAll();
+</script>
+</body>
+</html>
