@@ -1,9 +1,13 @@
 # Public
 Public Portfolio Repository
+---
 
 The Public Portfolio Repository contains my creative portfolio of work and PMI standard projects.
 
 Projects: 
+
+Project 1
+---
 1: Stakeholder Matrix App 
   Contents: PMI_Stakeholder_Matrix_Plotter.html, Stakeholder Engagement Planning Workbook.pdf
   Instructions: Use the app tool alongside Section 3 of the Workbook or as a stand alone tool. Workbook with app instructions are below.
