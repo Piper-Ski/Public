@@ -17,5 +17,8 @@ Projects:
  Step 7: Trace governance in Section 5 | Governance Traceability.
  End of Project 1
  ---
- 
+
+ 2. Scope Management Toolkit
+    Contents: Data input that I developed for structured project delivery modules & AI data input, PM Toolkit Deliverables, AI Prompts, ScopePlanningChecklist_Fillable & MoSCoW_Analysis_Fillable
+    
  
