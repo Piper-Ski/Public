@@ -2,7 +2,7 @@
 Public Portfolio Repository
 ---
 
-The Public Portfolio Repository contains my creative portfolio of work and PMI standard projects.
+The Public Portfolio Repository contains my creative portfolio of work, entrepreneurial endeavors and PMI standard technical project knowledge.
 
 Projects: 
 
