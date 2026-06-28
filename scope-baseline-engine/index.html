@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Scope Baseline Engine</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Scope Baseline Engine</h1>
+    <p>From Scope Statement Worksheet → Baseline-ready Scope</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Source Worksheet Inputs</h2>
+      <form id="sourceForm">
+        <fieldset>
+          <legend>Project Header</legend>
+          <label>
+            Project Name / Title
+            <input type="text" id="projectTitle" required />
+          </label>
+          <label>
+            Project Sponsor
+            <input type="text" id="projectSponsor" />
+          </label>
+          <label>
+            Project Manager
+            <input type="text" id="projectManager" />
+          </label>
+          <label>
+            Start Date
+            <input type="date" id="startDate" />
+          </label>
+          <label>
+            End Date
+            <input type="date" id="endDate" />
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Baseline-ready Summary Fields (from Scope Statement Worksheet)</legend>
+
+          <label>
+            Final Scope Statement Summary
+            <textarea id="finalScopeStatementSummary" rows="3"></textarea>
+          </label>
+
+          <label>
+            Final Major Deliverables Summary
+            <textarea id="finalMajorDeliverablesSummary" rows="3"></textarea>
+          </label>
+
+          <label>
+            Final Scope Exclusions Summary
+            <textarea id="finalScopeExclusionsSummary" rows="3"></textarea>
+          </label>
+
+          <label>
+            Final Key Assumptions Summary
+            <textarea id="finalKeyAssumptionsSummary" rows="3"></textarea>
+          </label>
+
+          <label>
+            Final Key Constraints Summary
+            <textarea id="finalKeyConstraintsSummary" rows="3"></textarea>
+          </label>
+
+          <label>
+            Final Acceptance / Completion Summary
+            <textarea id="finalAcceptanceCompletionSummary" rows="3"></textarea>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>WBS & WBS Dictionary References</legend>
+
+          <label>
+            WBS Reference (link, ID, or filename)
+            <input type="text" id="wbsReference" placeholder="e.g., WBS_v2.xlsx or https://..." />
+          </label>
+
+          <label>
+            WBS Dictionary Reference (link, ID, or filename)
+            <input type="text" id="wbsDictionaryReference" placeholder="e.g., WBSD_v3.pdf or https://..." />
+          </label>
+
+          <label>
+            Upload WBS Dictionary (optional)
+            <input type="file" id="wbsDictionaryFile" />
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Governance (Manual Baseline Fields)</legend>
+          <label>
+            Approved By
+            <input type="text" id="approvedBy" />
+          </label>
+          <label>
+            Released By
+            <input type="text" id="releasedBy" />
+          </label>
+          <label>
+            Approval Date
+            <input type="date" id="approvalDate" />
+          </label>
+          <label>
+            Estimated Hour Range
+            <input type="text" id="estimatedHourRange" placeholder="e.g., 800–1200 hours" />
+          </label>
+          <label>
+            Estimated Cost Range
+            <input type="text" id="estimatedCostRange" placeholder="e.g., $250k–$350k" />
+          </label>
+        </fieldset>
+
+        <button type="button" id="generateBtn">Generate Baseline</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Project Scope Baseline Worksheet (Generated)</h2>
+      <div id="baselineView">
+        <p class="hint">Fill the form on the left and click “Generate Baseline”.</p>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="downloadJsonBtn">Download Baseline JSON</button>
+        <button type="button" id="downloadHtmlBtn">Download Baseline HTML</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>
+      Auto-populated fields are synthesized from baseline-ready summary inputs.
+      Governance fields are manual entries. WBS and WBS Dictionary are referenced artifacts.
+    </small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
