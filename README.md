@@ -6,9 +6,9 @@ The Public Portfolio Repository contains my creative portfolio of work, entrepre
 
 Projects: 
 
-Project 1
+Project 1 
 ---
-1. Stakeholder Matrix App 
+1. Interactive PM Stakeholder Engagement Toolkit
   Contents: PMI_Stakeholder_Matrix_Plotter.html, Stakeholder Influence Plotter.html, Stakeholder Engagement Planning Workbook.pdf
   Instructions: Use the PMI_Stakeholder_Matrix_Plotter.html tool alongside Section 3 of the Workbook or as a stand alone tool. Use the Stakeholder Influence Plotter.html tool alongside Section 4 of the Workbook or as a stand alone tool.
 
