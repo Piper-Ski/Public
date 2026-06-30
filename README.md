@@ -9,8 +9,8 @@ Projects:
 Project 1
 ---
 1. Stakeholder Matrix App 
-  Contents: PMI_Stakeholder_Matrix_Plotter.html, Stakeholder Engagement Planning Workbook.pdf
-  Instructions: Use the app tool alongside Section 3 of the Workbook or as a stand alone tool. Workbook with app instructions are below.
+  Contents: PMI_Stakeholder_Matrix_Plotter.html, Stakeholder Influence Plotter.html, Stakeholder Engagement Planning Workbook.pdf
+  Instructions: Use the PMI_Stakeholder_Matrix_Plotter.html tool alongside Section 3 of the Workbook or as a stand alone tool. Use the Stakeholder Influence Plotter.html tool alongside Section 4 of the Workbook or as a stand alone tool.
 
 End of Project 1
 
